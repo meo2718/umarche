@@ -51,4 +51,27 @@ class CartController extends Controller
         Cart::where('product_id', $id) ->where('user_id', Auth::id())->delete();
         return redirect()->route('user.cart.index');
     }
+
+    public function checkout()
+    {
+        $user = User::findOrFail(Auth::id());
+        //userに紐づくproductsを取得→多対多のリレーション
+        $products = $user->products;
+        //カートに入ってる商品
+        $lineItems = [];
+        //foreachですべてのカートに入ってる商品を取得しlineitemsという配列へ追加していく
+        foreach($products as $product){
+            //商品情報をstripe側に受け取れる形にして渡す→stripe側で用意してるパラメータを使用
+            $lineItem = [
+                'name' => $product->name,
+                'description' => $product->information,
+                'amount' => $product->price,
+                'currency' => 'jpy',
+                'quantity' => $product->pivot->quantity,
+            ];
+            //$lineItemsへ追加
+            array_push($lineItems,$lineItem);
+        }
+        dd($lineItems);
+    }
 }
